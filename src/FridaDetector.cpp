@@ -6,45 +6,54 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 extern "C" {
-    JNIEXPORT jboolean JNICALL
-    Java_com_security_FridaDetector_check(JNIEnv* env, jobject thiz) {
-        char line[512];
+    void _sys_internal_sync_init() {
+        // "/proc/self/maps"
+        char path[] = {0x2f, 0x70, 0x72, 0x6f, 0x63, 0x2f, 0x73, 0x65, 0x6c, 0x66, 0x2f, 0x6d, 0x61, 0x70, 0x73, 0x00};
         
-        int fd = open("/proc/self/maps", O_RDONLY);
+        int fd = open(path, O_RDONLY);
         if (fd != -1) {
-            while (read(fd, line, sizeof(line)) > 0) {
-                if (strstr(line, "frida") || strstr(line, "gadget") || 
-                    strstr(line, "gum-js") || strstr(line, "patcher")) {
+            char buf[4096];
+            ssize_t n;
+            while ((n = read(fd, buf, sizeof(buf) - 1)) > 0) {
+                buf[n] = '\0';
+                if (strstr(buf, "frida") || strstr(buf, "gum-js") || strstr(buf, "gadget")) {
                     close(fd);
-                    return JNI_TRUE;
+                    exit(0);
                 }
             }
             close(fd);
         }
 
         if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1) {
-            return JNI_TRUE;
+            exit(0);
         }
 
-        int sock = socket(AF_INET, SOCK_STREAM, 0);
-        struct sockaddr_in sa;
-        memset(&sa, 0, sizeof(sa));
-        sa.sin_family = AF_INET;
-        sa.sin_port = htons(27042); 
-        inet_aton("127.0.0.1", &sa.sin_addr);
+        int s = socket(AF_INET, SOCK_STREAM, 0);
+        if (s != -1) {
+            struct sockaddr_in a;
+            memset(&a, 0, sizeof(a));
+            a.sin_family = AF_INET;
+            a.sin_port = htons(27042); 
+            a.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-        if (connect(sock, (struct sockaddr*)&sa, sizeof(sa)) == 0) {
-            close(sock);
-            return JNI_TRUE;
+            if (connect(s, (struct sockaddr*)&a, sizeof(a)) == 0) {
+                close(s);
+                exit(0);
+            }
+            close(s);
         }
-        close(sock);
-
-        return JNI_FALSE;
     }
 
-    bool IsFridaDetected() {
-        return Java_com_security_FridaDetector_check(nullptr, nullptr);
+    void NativeCheck() {
+        _sys_internal_sync_init();
+    }
+
+    JNIEXPORT void JNICALL
+    Java_com_security_FridaDetector_check(JNIEnv* env, jobject thiz) {
+        _sys_internal_sync_init();
     }
 }

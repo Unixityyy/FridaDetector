@@ -26,16 +26,18 @@ using UnityEngine;
 
 public static class FridaCheck {
     [DllImport("FridaDetector")]
-    private static extern bool IsFridaDetected();
+    private static extern void NativeCheck();
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    static void Initialize() {
-        try {
-            if (IsFridaDetected()) {
-                Application.Quit();
-            }
-        } catch (System.DllNotFoundException) {
-            // The .so was deleted or renamed
+    // if you get the DllNotFoundException even when the .so is in the apk, change SubsystemRegistration to BeforeSceneLoad
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void Initialize() 
+    {
+        try
+        {
+            NativeCheck();
+        }
+        catch (System.DllNotFoundException)
+        {
             Application.Quit();
         }
     }
