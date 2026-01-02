@@ -12,7 +12,6 @@ extern "C" {
     Java_com_security_FridaDetector_check(JNIEnv* env, jobject thiz) {
         char line[512];
         
-        // 1. Scan memory maps for frida/gadget/gum strings
         int fd = open("/proc/self/maps", O_RDONLY);
         if (fd != -1) {
             while (read(fd, line, sizeof(line)) > 0) {
