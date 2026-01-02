@@ -24,20 +24,29 @@ after allat is done, you can finally use it in a unity c# script, like this:
 using System.Runtime.InteropServices;
 using UnityEngine;
 
-public class FridaCheck : MonoBehaviour {
+public static class FridaCheck {
     [DllImport("FridaDetector")]
     private static extern bool IsFridaDetected();
 
-    void Awake() {
-        if (IsFridaDetected()) {
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void Initialize() {
+        try {
+            if (IsFridaDetected()) {
+                Application.Quit();
+            }
+        } catch (System.DllNotFoundException) {
+            // The .so was deleted or renamed
             Application.Quit();
         }
     }
 }
 ```
 you could make it send to a webhook, ban the player, etc. but in this example it just closes the app<br>
-**(if you use this, make sure to never make the script name obvious. if you do they can just go into uabea and disable it)**<br>
+**(the approach above *should* make it invisible to uabea)**<br>
+you could also make this check run like every 5 mins
 
+---
+### also renaming the lib is recommended. instead of `libFridaDetector.so`, you can make it `libOVRTracking.so`, or some legit sounding name. just make sure to update the `DllImport` if you do this!
 
 ## thats about it!
 ### if you have any other way of detecting frida please open a pr
