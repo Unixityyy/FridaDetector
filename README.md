@@ -13,7 +13,8 @@ drag the `libFridaDetector.so` into ur unity project at this path:<br>
 `Assets/Plugins/Android/libs/arm64-v8a/libFridaDetector.so`<br>
 when you do that, make sure its selected in unity, (the `libFridaDetector.so`) and in inspector select these settings:<br>
 - Platform: Android
-- CPU: ARM64<br>
+- CPU: ARM64
+- Load on Startup: true<br>
 ---
 now go to `Project Settings > Player > Android` and do these settings:
 - Scripting Backend: IL2CPP

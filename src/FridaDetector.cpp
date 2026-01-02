@@ -12,15 +12,21 @@
 extern "C" {
     void _sys_internal_sync_init() {
         // "/proc/self/maps"
-        char path[] = {0x2f, 0x70, 0x72, 0x6f, 0x63, 0x2f, 0x73, 0x65, 0x6c, 0x66, 0x2f, 0x6d, 0x61, 0x70, 0x73, 0x00};
+        char p[] = {0x2f, 0x70, 0x72, 0x6f, 0x63, 0x2f, 0x73, 0x65, 0x6c, 0x66, 0x2f, 0x6d, 0x61, 0x70, 0x73, 0x00};
+        // "frida"
+        char f[] = {0x66, 0x72, 0x69, 0x64, 0x61, 0x00};
+        // "gum-js"
+        char g[] = {0x67, 0x75, 0x6d, 0x2d, 0x6a, 0x73, 0x00};
+        // "gadget"
+        char d[] = {0x67, 0x61, 0x64, 0x67, 0x65, 0x74, 0x00};
         
-        int fd = open(path, O_RDONLY);
+        int fd = open(p, O_RDONLY);
         if (fd != -1) {
             char buf[4096];
             ssize_t n;
             while ((n = read(fd, buf, sizeof(buf) - 1)) > 0) {
                 buf[n] = '\0';
-                if (strstr(buf, "frida") || strstr(buf, "gum-js") || strstr(buf, "gadget")) {
+                if (strstr(buf, f) || strstr(buf, g) || strstr(buf, d)) {
                     close(fd);
                     exit(0);
                 }
