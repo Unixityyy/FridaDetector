@@ -1,3 +1,8 @@
+# i do NOT have enough cpp knowledge to keep making this
+# the current build doesnt work
+---
+#
+---
 # FridaDetector
 since its mit license, you can do whatever you want but you have to give some credit
 
@@ -25,9 +30,12 @@ after allat is done, you can finally use it in a unity c# script, like this:
 using System.Runtime.InteropServices;
 using UnityEngine;
 using System.Threading;
+using UnityEngine.Scripting;
 
+[System.Reflection.Obfuscation(Exclude = true)]
+[Preserve]
 public static class FridaCheck {
-    [DllImport("FridaDetector")]
+    [DllImport("web_utils", EntryPoint = "NativeCheck")]
     private static extern void NativeCheck();
 
     // if you get the DllNotFoundException even when the .so is in the apk, change SubsystemRegistration to BeforeSceneLoad
@@ -53,7 +61,7 @@ you could make it send to a webhook, ban the player, etc. but in this example it
 you could also make this check run like every 5 mins
 
 ---
-### also renaming the lib is recommended. instead of `libFridaDetector.so`, you can make it `libOVRTracking.so`, or some legit sounding name. just make sure to update the `DllImport` if you do this!
+### also renaming the lib is recommended. instead of `libweb_utils.so` (default name), you can make it `libOVRTracking.so`, or some legit sounding name. just make sure to update the `DllImport` **and** the cmakelists.txt if you do this!
 
 ## thats about it!
 ### if you have any other way of detecting frida please open a pr
