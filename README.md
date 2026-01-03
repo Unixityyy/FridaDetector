@@ -24,23 +24,27 @@ after allat is done, you can finally use it in a unity c# script, like this:
 ```cs
 using System.Runtime.InteropServices;
 using UnityEngine;
+using System.Threading;
 
 public static class FridaCheck {
     [DllImport("FridaDetector")]
     private static extern void NativeCheck();
 
     // if you get the DllNotFoundException even when the .so is in the apk, change SubsystemRegistration to BeforeSceneLoad
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    static void Initialize() 
-    {
-        try
-        {
-            NativeCheck();
-        }
-        catch (System.DllNotFoundException)
-        {
-            Application.Quit();
-        }
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    static void Initialize() {
+        // run in background to prevent it fucking with the main thread
+        // when its on main thread it hangs
+        Thread securityThread = new Thread(() => {
+            try {
+                NativeCheck();
+            } catch (System.DllNotFoundException) {
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
+            }
+        });
+        
+        securityThread.IsBackground = true;
+        securityThread.Start();
     }
 }
 ```

